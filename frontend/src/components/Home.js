@@ -41,7 +41,7 @@ export default function ProductsPage() {
          category: categoryFilter,
       }).toString()
 
-      const res = await fetch(`http://localhost:5000/api/products${query?"?"+query:""}`);
+      const res = await fetch(`${process.env.REACT_APP_API_URL}/api/products${query?"?"+query:""}`);
      
       if(!res.ok){
         throw new Error("Failed to fetch products")
@@ -64,7 +64,7 @@ export default function ProductsPage() {
         return;
     }
 
-    const res=await fetch('http://localhost:5000/api/cart/get-cart',{
+    const res=await fetch(`${process.env.REACT_APP_API_URL}/api/cart/get-cart`,{
      headers:{
        'Authorization':`Bearer ${token}`
     }
@@ -87,7 +87,7 @@ try {
     return
    }
   
-   const result=await fetch('http://localhost:5000/api/cart/addtoCart',{
+   const result=await fetch(`${process.env.REACT_APP_API_URL}/api/cart/addtoCart`,{
     method:'POST',
     headers:{
       'Content-Type':'application/json',
