@@ -1,5 +1,5 @@
 const Cart = require("../models/Cart");
-const Order = require("../models/orders");
+const Order = require("../models/Orders");
 
 const axios = require("axios");
 const PendingOrder = require("../models/PendingOrder");

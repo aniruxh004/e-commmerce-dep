@@ -1,5 +1,5 @@
 
-const Product = require("../models/products");
+const Product = require("../models/Products");
 
 
 const addProduct=async(req,res)=>{
