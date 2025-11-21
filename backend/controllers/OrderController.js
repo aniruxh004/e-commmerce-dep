@@ -1,4 +1,4 @@
-const Order = require('../models/orders');
+const Order = require('../models/Orders');
 const PendingOrder = require('../models/PendingOrder');
 const Cart = require('../models/Cart');
 const { Cashfree } = require('cashfree-pg'); // Ensure this is imported
