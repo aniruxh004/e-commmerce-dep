@@ -17,12 +17,12 @@ const createOrder = async (req, res) => {
         // NOTE: If your cart model uses 'Items' with a capital I, please change 'items' below
         const cart = await Cart.findOne({ userId: req.user._id }).populate('Items.productId'); 
 
-        if (!cart || cart.items.length === 0) {
+        if (!cart || cart.Items.length === 0) {
             return res.status(400).json({ msg: 'Cart is empty' });
         }
         
         // 2. Calculate Total Amount (in Rupees)
-        const totalAmountInRupees = cart.items.reduce(
+        const totalAmountInRupees = cart.Items.reduce(
             (sum, item) => sum + (item.productId?.price || 0) * item.quantity,
             0
         );
@@ -51,7 +51,7 @@ const createOrder = async (req, res) => {
         // Use the original items array from the cart for the lock
         await PendingOrder.create({
             userId: req.user._id,
-            Items: cart.items.map(item => ({ // NOTE: Using .items from cart, but mapping to Items for PendingOrder
+            Items: cart.Items.map(item => ({ // NOTE: Using .items from cart, but mapping to Items for PendingOrder
                 productId: item.productId._id,
                 name: item.productId.name,
                 price: item.productId.price,
