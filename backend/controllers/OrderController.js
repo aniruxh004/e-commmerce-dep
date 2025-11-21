@@ -1,7 +1,7 @@
 const Order = require('../models/Orders');
 const PendingOrder = require('../models/PendingOrder');
 const Cart = require('../models/Cart');
-const { Cashfree } = require('cashfree-pg'); // Ensure this is imported
+
 
 const createOrder = async (req, res) => {
     const { shippingAddress, contact } = req.body;
@@ -15,6 +15,8 @@ const createOrder = async (req, res) => {
 
         // --- CRITICAL FIX: Initialize Cashfree with explicit object syntax ---
         // This is the most reliable way to pass credentials to the SDK.
+
+        const { Cashfree } = require('cashfree-pg');
         const cashfreeInstance = new Cashfree({
             clientID: process.env.CASHFREE_CLIENT_ID,
             clientSecret: process.env.CASHFREE_CLIENT_SECRET,
