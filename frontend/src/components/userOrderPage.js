@@ -23,7 +23,7 @@ export default function UserOrdersPage() {
         }
         
         try {
-            const res = await axios.get('http://localhost:5000/api/orders/myOrders', {
+            const res = await axios.get(`${process.env.REACT_APP_API_URL}/api/orders/myOrders`, {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
