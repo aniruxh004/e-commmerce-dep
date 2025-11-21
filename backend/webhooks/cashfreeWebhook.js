@@ -1,7 +1,7 @@
 const Cart = require("../models/Cart");
 const PendingOrder = require("../models/PendingOrder")
 const Order = require("../models/Orders")
-const Products=require("../models/Products")
+const Products=require("../models/products")
 
 module.exports = async (req, res) => {
   try {
