@@ -29,7 +29,7 @@ export default function CheckoutPage() {
 
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch('http://localhost:5000/api/orders/create-order', {
+      const res = await fetch(`${process.env.REACT_APP_API_URL}/api/orders/create-order`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
