@@ -43,7 +43,7 @@ export default function AddProductForm() {
       data.append('stock', formData.stock);
       data.append('imageUrl', imageFile);
 
-      const res = await fetch('http://localhost:5000/api/products/add-product', {
+      const res = await fetch(`${process.env.REACT_APP_API_URL}/api/products/add-product`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`
