@@ -6,30 +6,35 @@ const { Cashfree } = require('cashfree-pg'); // Ensure this is imported
 const createOrder = async (req, res) => {
     const { shippingAddress, contact } = req.body;
     try {
-        // --- CRITICAL FIX: Initialize Cashfree inside the try block ---
-        // This guarantees that the process.env variables are already loaded.
-        const cashfreeInstance = new Cashfree(
-            process.env.CASHFREE_CLIENT_ID,
-            process.env.CASHFREE_CLIENT_SECRET,
-            'TEST', // Use 'TEST' for sandbox mode
-            '2022-09-01' // Your API version
-        );
-        // -------------------------------------------------------------
+        // --- CRITICAL DEBUGGING CHECK ---
+        if (!process.env.CASHFREE_CLIENT_ID || !process.env.CASHFREE_CLIENT_SECRET) {
+            console.error("FATAL CONFIG ERROR: CASHFREE_CLIENT_ID or SECRET is missing.");
+            return res.status(500).json({ msg: 'Configuration Error: Missing API Key in ENV.' });
+        }
+        // ------------------------------------
 
-        // 1. Fetch Cart Data
-        const cart = await Cart.findOne({ userId: req.user._id }).populate('Items.productId'); 
+        // --- CRITICAL FIX: Initialize Cashfree with explicit object syntax ---
+        // This is the most reliable way to pass credentials to the SDK.
+        const cashfreeInstance = new Cashfree({
+            clientID: process.env.CASHFREE_CLIENT_ID,
+            clientSecret: process.env.CASHFREE_CLIENT_SECRET,
+            env: 'TEST', // Use 'TEST' for sandbox mode
+        });
+        // ----------------------------------------------------------------------
+        
+        const cart = await Cart.findOne({ userId: req.user._id }).populate('Items.productId');
 
         if (!cart || cart.Items.length === 0) {
             return res.status(400).json({ msg: 'Cart is empty' });
         }
         
-        // 2. Calculate Total Amount (in Rupees)
+        // Ensure all required price properties exist
         const totalAmountInRupees = cart.Items.reduce(
             (sum, item) => sum + (item.productId?.price || 0) * item.quantity,
             0
         );
 
-        // 3. CASHFREE ORDER CREATION
+        // 1. CASHFREE ORDER CREATION (This will now have a valid cashfreeInstance)
         const cashfreeOrder = await cashfreeInstance.orders.create({
             order_id: "order_" + Date.now(),
             order_amount: totalAmountInRupees,
@@ -45,7 +50,7 @@ const createOrder = async (req, res) => {
             }
         });
 
-        // 4. CREATE PENDING ORDER (The Lock)
+        // 2. CREATE PENDING ORDER (LOCK)
         await PendingOrder.create({
             userId: req.user._id,
             Items: cart.Items.map(item => ({
@@ -62,7 +67,7 @@ const createOrder = async (req, res) => {
             paymentSessionId: cashfreeOrder.payment_session_id
         });
 
-        // 5. RESPOND WITH SESSION ID
+        // 3. RESPOND WITH SESSION ID
         res.json({
             payment_session_id: cashfreeOrder.payment_session_id,
             order_id: cashfreeOrder.order_id,
