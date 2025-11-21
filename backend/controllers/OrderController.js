@@ -15,7 +15,7 @@ const createOrder = async (req, res) => {
     try {
         // 1. Fetch Cart Data (Populating the necessary details)
         // NOTE: If your cart model uses 'Items' with a capital I, please change 'items' below
-        const cart = await Cart.findOne({ userId: req.user._id }).populate('items.productId'); 
+        const cart = await Cart.findOne({ userId: req.user._id }).populate('Items.productId'); 
 
         if (!cart || cart.items.length === 0) {
             return res.status(400).json({ msg: 'Cart is empty' });
