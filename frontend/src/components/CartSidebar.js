@@ -21,7 +21,7 @@ export default function CartSidebar({ isCartOpen, setIsCartOpen, cart, setCart }
     
     try {
        const token=localStorage.getItem('token')
-      const res=await fetch('http://localhost:5000/api/cart/update',{
+      const res=await fetch(`${process.env.REACT_APP_API_URL}/api/cart/update`,{
         method:"PUT",
         headers:{
           'Content-Type':"application/json",
@@ -49,7 +49,7 @@ export default function CartSidebar({ isCartOpen, setIsCartOpen, cart, setCart }
 
      try {
        const token=localStorage.getItem('token')
-       const res=await fetch(`http://localhost:5000/api/cart/${cartId}`,{
+       const res=await fetch(`${process.env.REACT_APP_API_URL}/api/cart/${cartId}`,{
          method:'DELETE',
          headers:{
            'Content-Type':'application/json',
