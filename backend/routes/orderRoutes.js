@@ -17,7 +17,7 @@
 
 const express = require('express');
 const { verifyUser, isAdmin } = require("../Middleware/auth");
-const { createOrder, getAllOrders } = require("../controllers/OrderController");
+const { createOrder, getAllOrders, userOrders } = require("../controllers/OrderController");
 const Router = express.Router();
 
 console.log("Order routes loaded");
@@ -29,5 +29,6 @@ Router.get('/test', (req, res) => {
 
 Router.post('/create-order', verifyUser, createOrder);
 Router.get('/all', verifyUser, isAdmin, getAllOrders);
+Router.get('/myOrders', verifyUser,userOrders);
 
 module.exports = Router;

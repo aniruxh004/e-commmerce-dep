@@ -1,6 +1,7 @@
 /* src/components/Navbar.css */
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap');
 
+/* --- Base Styles: Desktop (Applies to all) --- */
 .navbar-container {
   display: flex;
   justify-content: space-between;
@@ -9,13 +10,11 @@
   background-color: #FF7F00;
   color: white;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  /* The key for a reliable sticky header */
   position: sticky;
   top: 0;
   z-index: 1000;
-  height:60px;
-} 
-
-
+}
 
 .nav-left, .nav-right, .nav-center {
   display: flex;
@@ -40,9 +39,8 @@
 }
 
 .brand-logo {
-  height: 77px;
+  height: 50px; /* Base size for desktop */
   width: auto;
-  
 }
 
 .search-input {
@@ -52,7 +50,7 @@
   border-radius: 25px;
   width: 400px;
   background-color: white;
-  color:#000;
+  color: #000;
   font-size: 1rem;
 }
 
@@ -73,6 +71,7 @@
   transform: scale(1.1);
 }
 
+/* --- Dropdown Shared Styles --- */
 .dropdown-group {
   display: flex;
   align-items: center;
@@ -96,7 +95,6 @@
   background-color: rgba(255, 255, 255, 0.2);
 }
 
-/* --- Shared Dropdown Styles --- */
 .dropdown-menu {
   position: absolute;
   top: calc(100% + 10px);
@@ -115,11 +113,9 @@
 }
 
 .dropdown-item {
-  display: block;
   padding: 10px 15px;
-  text-decoration: none;
   color: #333;
-  background-color: transparent;
+  background: transparent;
   border: none;
   text-align: left;
   cursor: pointer;
@@ -131,13 +127,11 @@
   box-shadow: 2px 2px 5px rgba(255, 127, 0, 0.3);
 }
 
-/* Specific styles for sort/filter dropdowns */
 .sort-filter-menu {
   right: auto;
   left: 0;
 }
 
-/* Profile dropdown specific styles */
 .user-dropdown-container {
   position: relative;
 }
@@ -149,7 +143,109 @@
   color: #FF7F00;
 }
 
-.nav-right a.nav-icon-button {
-  text-decoration: none;
-  color: inherit;
+/* --- Responsive Adjustments --- */
+
+/* Tablet and Small Laptop (Max-width: 992px) */
+@media (max-width: 992px) {
+  .navbar-container {
+    flex-direction: row; 
+    flex-wrap: wrap;
+    height: auto;
+    padding: 15px 10px;
+    gap: 12px;
+  }
+  .nav-center {
+    order: 3; /* Move search center below other content */
+    width: 100%; /* Take full width */
+    margin: 10px 0;
+    justify-content: center;
+  }
+  .nav-left {
+    flex-basis: auto;
+    flex-grow: 1;
+  }
+  .nav-right {
+    flex-basis: auto;
+    flex-grow: 1;
+    justify-content: flex-end;
+  }
+  .search-input {
+    width: 100%;
+    min-width: 0;
+  }
+  .brand-logo {
+    height: 45px;
+  }
+}
+
+/* Large Mobile (Max-width: 600px) */
+@media (max-width: 600px) {
+  .navbar-container {
+    flex-direction: row; /* Allow horizontal alignment */
+    flex-wrap: wrap; /* CRUCIAL: Allow items to move to the next line */
+    height: auto;
+    padding: 10px 15px;
+    align-items: flex-start;
+  }
+  
+  /* Top Row (Icons and Branding) */
+  .nav-left {
+    order: 1; /* Cart icon */
+    flex-basis: 40px; /* Fixed space for the icon */
+    justify-content: flex-start;
+  }
+
+  .nav-right {
+    order: 2; /* Profile icon and Sorting/Filtering controls */
+    flex-basis: 60%; /* Take up remaining space */
+    justify-content: flex-end;
+    gap: 5px; /* Reduce gap between sort/filter dropdowns */
+  }
+  
+  /* Search Bar (Pushed to its own row) */
+  .nav-center {
+    order: 4; /* Push it below everything */
+    width: 100%; /* Take full width of the container */
+    margin-top: 8px; /* Add slight vertical spacing */
+    justify-content: center;
+  }
+  
+  /* Adjustments for elements within the new mobile layout */
+  .search-input {
+    width: 95%; /* Make search bar take full width */
+    font-size: 0.95rem;
+    padding: 8px 12px;
+  }
+  
+  .brand-logo {
+    height: 38px; /* Smaller logo for mobile */
+  }
+  
+  .dropdown-group label,
+  .dropdown-label-btn {
+    font-size: 0.8rem; /* Shrink font size */
+    padding: 5px 8px;
+  }
+  
+  .nav-icon-button {
+    font-size: 1.3rem;
+  }
+}
+
+/* Small Mobile (Max-width: 400px) */
+@media (max-width: 400px) {
+  .navbar-container {
+    padding: 6px 1vw;
+  }
+  /* Further shrinkage for tiny screens */
+  .search-input {
+    width: 90%;
+    font-size: 0.85rem;
+    padding: 5px 9px;
+  }
+  .dropdown-label-btn,
+  .dropdown-group label {
+    font-size: 0.75rem;
+    padding: 5px 8px;
+  }
 }

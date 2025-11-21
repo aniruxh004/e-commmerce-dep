@@ -94,7 +94,7 @@ const handleCheckout=()=>{
         ) : (
           cart.map(item => (
             <div key={item._id} className="cart-item">
-              <img src={`http://localhost:5000/${item.productId.imageUrl}`} alt={item.name} className="cart-item-image" />
+              <img src={item.productId.imageUrl} alt={item.name} className="cart-item-image" />
               <div className="cart-item-info">
                 <h4>{item.productId.name}</h4>
                 <p>₹{typeof item.productId.price === 'number' ? item.productId.price.toFixed(2) : item.productId.price}</p>

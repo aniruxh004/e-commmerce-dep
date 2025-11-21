@@ -20,6 +20,7 @@ import AddProductForm from './components/AddProduct';
 import CheckoutPage from './components/CheckoutPage';
 import OrdersPage from './components/OrdersPage';  // Import OrdersPage
 import { PaymentConfirmation } from './components/confirmationPage';
+import UserOrdersPage from './components/userOrderPage';
 
 function App() {
   return (
@@ -33,6 +34,8 @@ function App() {
           <Route element={<ProtectedRoute />}>
             <Route path="/add-product" element={<AddProductForm />} />
             <Route path="/orders" element={<OrdersPage />} />  {/* New route */}
+            <Route path="/myOrders" element={<UserOrdersPage/>} />  
+
             <Route path="/productCard" element={<ProductCard />} />
             <Route path="/checkout" element={<CheckoutPage />} />
             <Route path="/payment-confirmation" element={<PaymentConfirmation/>} />

@@ -14,13 +14,20 @@ dotenv.config();
 connectDB();
 
 const app = express();
+const allowedOrigin = 'http://localhost:3000';
 
-app.use(cors());
+app.use(cors({
+  origin: allowedOrigin,
+  methods: 'GET,HEAD,PUT,PATCH,POST,DELETE', // Allow all necessary HTTP methods
+  // CRITICAL FIX: Explicitly allow the Authorization header
+  allowedHeaders: ['Content-Type', 'Authorization'], 
+  credentials: true,
+}));
 app.use(express.json());
 app.post(
-  '/webhook/cashfree',                      // 1️⃣ the route (Cashfree will POST here)
-  express.raw({ type: 'application/json' }), // 2️⃣ middleware to grab the raw body
-  require('./webhooks/cashfreeWebhook')     // 3️⃣ your handler module
+  '/webhook/cashfree',                      
+  express.raw({ type: 'application/json' }), 
+  require('./webhooks/cashfreeWebhook')     
 );
 
 app.use('/api/auth', authRoutes);

@@ -92,9 +92,28 @@ const getAllOrders = async (req, res) => {
   }
 };
 
+
+const userOrders=async(req,res)=>{
+try {
+ 
+
+    
+    const orders = await Order.find({ userId: req.user._id }) 
+      .populate("Items.productId", "name price imageUrl")
+      .sort({ createdAt: -1 });
+    
+
+    res.json(orders);
+  } catch (error) {
+    console.error(error)
+    res.status(400).json({msg:'Internal server error'})
+  }
+}
+
 module.exports = {
   createOrder,
-  getAllOrders
+  getAllOrders,
+  userOrders
 };
 
 

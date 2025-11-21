@@ -24,7 +24,7 @@ const ProductModal = ({ product, onClose, onAddToCart }) => {
         <button className="close-button" onClick={onClose}>&times;</button>
         <div className="modal-body">
           <div className="modal-image-container">
-            <img src={`http://localhost:5000/${product.imageUrl}`} alt={product.name} className="modal-image" />
+            <img src={product.imageUrl} alt={product.name} className="modal-image" />
           </div>
           <div className="modal-details">
             <h2 className="modal-product-name">{product.name}</h2>

@@ -7,7 +7,7 @@ import './ProductCard.css';
 export default function ProductCard({ product, onAddToCart,onProductClick}) {
   return (
     <div className="product-card-container" onClick={onProductClick}>
-      <img src={`http://localhost:5000/${product.imageUrl}`} alt={product.name} className="product-image" />
+      <img src={product.imageUrl} alt={product.name} className="product-image" />
       <div className="product-details">
         <div className="product-info-top">
           <h3 className="product-name">{product.name}</h3>

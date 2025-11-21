@@ -1,76 +1,33 @@
 
-// // const express = require('express');
-// // const { getProducts } = require('../controllers/productController');
-// const multer=require("multer")
-// const{getProducts, addProduct}=require('../controllers/productController');
-// const express=require("express");
-// const { verifyUser, isAdmin } = require('../Middleware/auth');
-// const multer=require("multer")
-// const path=require("path")
-// const Router=express.Router()
-// const path=require("path")
-// const storage=multer.diskStorage({
-//     destination:function(req,file,cb){
-//      cb(null, path.join(__dirname, '../uploads'));
-//     },
-//     filename:function(req,file,cb){
-//       cb(null,Date.now()+'-'+file.originalname)
-//     }
-// })
-
-// <<<<<<< HEAD
-// const upload=multer({storage:storage})
-// Router.get('/', getProducts);
-
-// Router.get('/',getProducts)
-// Router.get('/add-product',verifyUser,isAdmin,upload.single('imageUrl'),addProduct)
-// =======
-
-// const storage=multer.diskStorage({
-//     destination:function(req,file,cb){
-//      cb(null, path.join(__dirname, '../uploads'));
-//     },
-//     filename:function(req,file,cb){
-//       cb(null,Date.now()+'-'+file.originalname)
-//     }
-// })
-
-// const upload=multer({storage:storage})
-
-// Router.get('/',getProducts)
-// Router.post('/add-product',verifyUser,isAdmin,upload.single('imageUrl'),addProduct)
-// >>>>>>> 58f34e8c26fe8f5626528bf5461e6ad6178bc66d
-
-
-// module.exports = Router;
-
-
-
-
-
-
-
-
-
-
-
-
+require("dotenv").config()
 const express = require("express");
 const path = require("path");
 const multer = require("multer");
 const { getProducts, addProduct } = require("../controllers/productController");
 const { verifyUser, isAdmin } = require("../Middleware/auth");
+const cloudinary=require("cloudinary").v2
+const {CloudinaryStorage}=require("multer-storage-cloudinary")
+
 
 const Router = express.Router();
 
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, path.join(__dirname, "../uploads"));
-  },
-  filename: function (req, file, cb) {
-    cb(null, Date.now() + "-" + file.originalname);
-  },
-});
+cloudinary.config({
+    cloud_name:process.env.CLOUDINARY_CLOUD_NAME,
+    api_key:process.env.CLOUDINARY_API_KEY,
+    api_secret:process.env.CLOUDINARY_API_SECRET
+})
+
+
+const storage=new CloudinaryStorage({
+ cloudinary:cloudinary,
+ params:{
+  folder:'oasis_products',
+  format:async(req,file)=>'png',
+  public_id:(req,file)=>`${req.body.name}-${Date.now()}`
+ }
+})
+
+
 
 const upload = multer({ storage: storage });
 

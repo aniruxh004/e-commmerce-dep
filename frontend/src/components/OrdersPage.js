@@ -29,6 +29,9 @@ const OrdersPage = () => {
     } else {
       setLoading(false);
       setError("Access Denied. Admins only.");
+
+    
+
     }
   }, [user]);
 
@@ -71,7 +74,7 @@ const OrdersPage = () => {
               <div className="order-items">
                 {order.Items.map((item) => (
                   <div key={item.productId._id} className="order-item-card">
-                    <img src={`http://localhost:5000/${item.productId.imageUrl}`} alt={item.name} className="order-item-image" />
+                    <img src={item.productId.imageUrl} alt={item.name} className="order-item-image" />
                     <div className="order-item-info">
                       <p className="item-name">{item.name}</p>
                       <p className="item-details">Qty: {item.quantity} | Size: {item.size}</p>

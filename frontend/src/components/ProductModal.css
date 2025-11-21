@@ -1,4 +1,3 @@
-
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap');
 
 .modal-overlay {
@@ -203,4 +202,65 @@
 
 .modal-add-to-cart-button:hover {
   background-color: #e66a00;
+}
+@media (max-width: 768px) {
+  .modal-content {
+    width: 95%; 
+    height: 95%;
+    max-width: 95%;
+    overflow-y: scroll; /* Make the entire modal scrollable */
+  }
+
+  .modal-body {
+    flex-direction: column; /* CRUCIAL: Stacks image and details vertically */
+    padding: 20px;
+    gap: 20px;
+  }
+  
+  /* Resetting flex-basis to ensure both containers take full width */
+  .modal-image-container {
+    flex-basis: auto; 
+    width: 100%;
+    /* Set a contained area for the image to be prominent */
+    max-height: 350px; 
+  }
+
+  .modal-details {
+    flex-basis: auto;
+    width: 100%;
+    padding-bottom: 20px; /* Add space below details */
+  }
+  
+  .modal-image {
+    /* Image fills the defined max-height of its container */
+    max-height: 100%; 
+  }
+
+  .modal-product-name {
+    font-size: 1.8rem;
+    text-align: center;
+  }
+
+  .modal-price-size {
+    flex-direction: row; /* Keep these horizontal on mobile */
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .modal-actions {
+    flex-direction: column; /* Stack quantity and cart button */
+    align-items: stretch;
+    gap: 10px;
+  }
+  
+  .quantity-control {
+    width: 100%;
+    justify-content: space-between;
+    padding: 5px;
+  }
+
+  .modal-add-to-cart-button {
+    width: 100%;
+    justify-content: center;
+  }
 }

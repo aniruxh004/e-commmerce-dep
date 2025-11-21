@@ -3,12 +3,13 @@ const{ validateToken }=require("../services/jwtAuth");
 
 const verifyUser = (req, res, next) => {
   const token = req.header('Authorization')?.split(" ")[1];
-  // console.log("Token:", token);
+  
   if (!token) return res.status(401).json({ msg: "NO token" });
   try {
     const payload = validateToken(token);
     // console.log("Decoded payload:", payload);
     req.user = payload;
+    console.log(`user ${req.user._id} processed `);
     next();
   } catch (error) {
     return res.status(401).json({ msg: "NO token" });
