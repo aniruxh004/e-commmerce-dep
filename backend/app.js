@@ -10,8 +10,6 @@ const orderRoutes = require('./routes/orderRoutes');
 const path=require("path")
 const PORT = process.env.PORT || 5000;
 
-const WEBHOOK_PATH = process.env.PUBLIC_WEBHOOK_BASE_URL||'/webhooks/cashfree'
-
 dotenv.config();
 connectDB();
 
@@ -27,7 +25,7 @@ app.use(cors({
 }));
 app.use(express.json());
 app.post(
-  WEBHOOK_PATH,                      
+  '/webhooks/cashfree',                      
   express.raw({ type: 'application/json' }), 
   require('./webhooks/cashfreeWebhook')     
 );
