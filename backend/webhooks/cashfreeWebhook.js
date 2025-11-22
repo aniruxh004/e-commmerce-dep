@@ -83,9 +83,16 @@ module.exports = async (req, res) => {
     }
     console.log("Unhandled event:", event);
     return res.status(200).send("ok");
-  } catch (error) {
-    console.error('Webhook error:', error);
-    return res.status(500).send('server error');
-  }
+  }catch (error) {
+        // 2. SECONDARY LOCK: Handle the E11000 concurrency crash gracefully
+        if (error.code === 11000) {
+            console.warn(`[DUPLICATE IGNORED] Order ${error.keyValue.cashfreeOrderId} was processed concurrently.`);
+            return res.status(200).send('ok');
+        }
+        
+        // Log all other errors and return 500
+        console.error('CRITICAL WEBHOOK PROCESSING ERROR:', error);
+        return res.status(500).send('server error');
+    }
 
 }
