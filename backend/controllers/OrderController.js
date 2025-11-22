@@ -4,192 +4,125 @@ const Cart = require('../models/Cart');
 const { Cashfree } = require('cashfree-pg');
 const axios = require('axios');
 
+
 const createOrder = async (req, res) => {
   const { shippingAddress, contact } = req.body;
 
   try {
-    // ENV checks
+    // ENV validation
     if (!process.env.CASHFREE_CLIENT_ID || !process.env.CASHFREE_CLIENT_SECRET) {
-      console.error("FATAL CONFIG: CASHFREE_CLIENT_ID or CASHFREE_CLIENT_SECRET missing");
-      return res.status(500).json({ msg: 'Configuration Error: Missing Cashfree credentials.' });
+      console.error("Cashfree keys missing");
+      return res.status(500).json({ msg: "Server config error" });
     }
 
-    // Basic input validation
-    if (!contact || typeof contact !== 'string') {
-      return res.status(400).json({ msg: 'Invalid contact phone number.' });
+    // Input validation
+    if (!contact) return res.status(400).json({ msg: "Phone number missing" });
+
+    // Fetch cart using cart.Items
+    const cart = await Cart.findOne({ userId: req.user._id }).populate("Items.productId");
+    if (!cart || !cart.Items || cart.Items.length === 0) {
+      return res.status(400).json({ msg: "Cart empty" });
     }
 
-    // Fetch cart and ensure Items is populated
-    const cart = await Cart.findOne({ userId: req.user._id }).populate('Items.productId');
+    const cartItems = cart.Items;
 
-    if (!cart) {
-      return res.status(400).json({ msg: 'Cart not found' });
-    }
-
-    // MUST use cart.Items as requested
-    const cartItems = Array.isArray(cart.Items) ? cart.Items : [];
-    if (cartItems.length === 0) {
-      return res.status(400).json({ msg: 'Cart is empty' });
-    }
-
-    // Compute total using cart.Items (defensive)
-    const total = cartItems.reduce((sum, item) => {
-      const price = Number(item.productId?.price ?? item.price ?? 0);
-      const qty = Number(item.quantity ?? 1);
-      return sum + price * qty;
+    // Calculate total
+    const totalAmount = cartItems.reduce((sum, item) => {
+      const price = Number(item.productId?.price ?? 0);
+      return sum + price * Number(item.quantity ?? 1);
     }, 0);
 
-    if (total <= 0) {
-      return res.status(400).json({ msg: 'Cart total is zero or invalid' });
+    if (totalAmount <= 0) {
+      return res.status(400).json({ msg: "Invalid cart total" });
     }
 
-    const orderAmountStr = total.toFixed(2);
-    const orderId = `order_${Date.now()}`;
+    const orderAmountStr = totalAmount.toFixed(2);
+    const orderId = "order_" + Date.now();
 
     const payload = {
       order_id: orderId,
       order_amount: orderAmountStr,
-      order_currency: 'INR',
+      order_currency: "INR",
       customer_details: {
         customer_id: req.user._id.toString(),
         customer_email: req.user.email,
         customer_phone: contact,
       },
       order_meta: {
-        return_url: `${req.protocol}://${req.get('host')}/payment-confirmation`,
-        notify_url: process.env.PUBLIC_WEBHOOK_BASE_URL || '',
+        return_url: `${req.protocol}://${req.get("host")}/payment-confirmation`,
+        notify_url: process.env.PUBLIC_WEBHOOK_BASE_URL || "",
       },
     };
 
-    // === Try multiple SDK shapes, fallback to raw HTTP if needed ===
-    let cashfreeOrder = null;
+    // ==========================================
+    // 1️⃣ FALLBACK: Raw Axios Request (WORKING & STABLE)
+    // ==========================================
 
-    try {
-      // Attempt to construct an instance (some versions support constructor)
-      let sdkInstance = null;
-      try {
-        // Many versions expose constants for env; attempt common constructor shapes
-        if (typeof Cashfree === 'function') {
-          // try constructor with object (some versions)
-          try {
-            sdkInstance = new Cashfree({
-              clientID: process.env.CASHFREE_CLIENT_ID,
-              clientSecret: process.env.CASHFREE_CLIENT_SECRET,
-              env: process.env.CASHFREE_ENV === 'PROD' ? 'PROD' : 'TEST',
-            });
-          } catch (inner) {
-            // fallback to other constructor signatures
-            try {
-              // e.g., new Cashfree(Cashfree.SANDBOX, id, secret)
-              sdkInstance = new Cashfree(Cashfree.SANDBOX || 'TEST', process.env.CASHFREE_CLIENT_ID, process.env.CASHFREE_CLIENT_SECRET);
-            } catch (e) {
-              sdkInstance = null;
-            }
-          }
-        }
+    const env = (process.env.CASHFREE_ENV || "TEST").toUpperCase();
+    const baseURL =
+      env === "PROD"
+        ? "https://api.cashfree.com/pg"
+        : "https://sandbox.cashfree.com/pg";
 
-        // Log SDK high-level shape for debugging (remove/turn off in prod)
-        console.info('Cashfree top-level keys:', Object.keys(Cashfree || {}), 'sdkInstance keys:', sdkInstance ? Object.keys(sdkInstance) : null);
+    const headers = {
+      "Content-Type": "application/json",
+      "x-client-id": process.env.CASHFREE_CLIENT_ID,
+      "x-client-secret": process.env.CASHFREE_CLIENT_SECRET,
+      "x-api-version": process.env.CASHFREE_API_VERSION
+    };
 
-        // 1) Try documented static helper (common in v5+): Cashfree.PGCreateOrder(...)
-        if (typeof Cashfree.PGCreateOrder === 'function') {
-          const resp = await Cashfree.PGCreateOrder(payload);
-          cashfreeOrder = resp?.data ?? resp;
-        }
-        // 2) Try instance method PGCreateOrder on sdkInstance
-        else if (sdkInstance && typeof sdkInstance.PGCreateOrder === 'function') {
-          const resp = await sdkInstance.PGCreateOrder(payload);
-          cashfreeOrder = resp?.data ?? resp;
-        }
-        // 3) Try old style .orders.create if available (your original shape)
-        else if (sdkInstance && sdkInstance.orders && typeof sdkInstance.orders.create === 'function') {
-          const resp = await sdkInstance.orders.create(payload);
-          cashfreeOrder = resp?.data ?? resp;
-        }
-        // 4) Try other static names that some forks use
-        else if (typeof Cashfree.createOrder === 'function') {
-          const resp = await Cashfree.createOrder(payload);
-          cashfreeOrder = resp?.data ?? resp;
-        }
-        // 5) FALLBACK: raw HTTP POST to Cashfree Orders API (works regardless of SDK)
-        else {
-          console.warn('Cashfree SDK shape not detected; falling back to raw HTTP POST to Cashfree Orders API.');
-          const base = (process.env.CASHFREE_ENV && process.env.CASHFREE_ENV.toUpperCase() === 'PROD')
-            ? 'https://api.cashfree.com/pg' : 'https://sandbox.cashfree.com/pg';
-          const url = `${base}/orders`;
-          const headers = {
-            'Content-Type': 'application/json',
-            'x-client-id': process.env.CASHFREE_CLIENT_ID,
-            'x-client-secret': process.env.CASHFREE_CLIENT_SECRET,
-          };
-          const r = await axios.post(url, payload, { headers });
-          cashfreeOrder = r.data;
-        }
-      } catch (innerErr) {
-        // Log SDK/fetch problem, then rethrow to outer catch
-        console.error('Error while invoking Cashfree SDK or API:', innerErr?.message || innerErr);
-        if (innerErr.response) console.error('Cashfree response:', innerErr.response.data || innerErr.response);
-        throw innerErr;
-      }
-    } catch (sdkErr) {
-      // bubble up to outer catch to return 500
-      throw sdkErr;
-    }
+    console.log(
+      `Calling Cashfree ${env} → ${baseURL}/orders with API version 2022-09-01`
+    );
 
-    console.info('cashfreeOrder (raw):', JSON.stringify(cashfreeOrder));
+    const cfResp = await axios.post(`${baseURL}/orders`, payload, { headers });
 
-    // extract common fields defensively
-    const cfOrderId =
-      cashfreeOrder?.order_id ||
-      cashfreeOrder?.data?.order_id ||
-      cashfreeOrder?.orderId ||
-      cashfreeOrder?.id ||
-      null;
+    const cashfreeOrder = cfResp.data;
 
-    const cfPaymentSessionId =
+    console.log("Cashfree Order Response:", cashfreeOrder);
+
+    const sessionId =
       cashfreeOrder?.payment_session_id ||
-      cashfreeOrder?.data?.payment_session_id ||
       cashfreeOrder?.order_token ||
-      cashfreeOrder?.paymentSessionId ||
       null;
 
-    if (!cfOrderId || !cfPaymentSessionId) {
-      console.error('Unexpected Cashfree response shape:', cashfreeOrder);
-      return res.status(502).json({ msg: 'Payment provider returned unexpected response.' });
+    if (!sessionId) {
+      return res.status(502).json({
+        msg: "Cashfree responded but missing session_id",
+        raw: cashfreeOrder,
+      });
     }
 
-    // Create pending order using cart.Items specifically
+    // Save pending order
     const pendingOrder = await PendingOrder.create({
       userId: req.user._id,
       Items: cartItems.map((item) => ({
-        productId: item.productId?._id ?? item.productId,
-        name: item.productId?.name ?? item.name ?? '',
-        price: Number(item.productId?.price ?? item.price ?? 0),
-        quantity: Number(item.quantity ?? 1),
-        size: item.size ?? item.selectedSize ?? null,
+        productId: item.productId._id,
+        name: item.productId.name,
+        price: item.productId.price,
+        quantity: item.quantity,
+        size: item.size,
       })),
       shippingAddress,
       totalAmount: Number(orderAmountStr),
-      paymentStatus: 'pending',
-      cashfreeOrderId: cfOrderId,
-      paymentSessionId: cfPaymentSessionId,
-      createdAt: new Date(),
+      paymentStatus: "pending",
+      cashfreeOrderId: orderId,
+      paymentSessionId: sessionId,
     });
 
-    // Optionally: lock/clear cart here if desired
-    // await Cart.findByIdAndUpdate(cart._id, { Items: [], items: [] });
-
-    // Return needed session details to client
     return res.json({
-      payment_session_id: cfPaymentSessionId,
-      order_id: cfOrderId,
+      payment_session_id: sessionId,
+      order_id: orderId,
       pendingOrderId: pendingOrder._id,
     });
   } catch (error) {
-    console.error('CRASH IN CREATE ORDER:', error?.message || error);
-    console.error(error?.stack);
-    if (error.response) console.error('Cashfree error response:', JSON.stringify(error.response.data || error.response));
-    return res.status(500).json({ msg: 'Server error: Failed to create Cashfree order.' });
+    console.error("Cashfree ERROR:", error.message);
+    console.error("Full:", error.response?.data);
+
+    return res.status(500).json({
+      msg: "Failed to create Cashfree order",
+      error: error.response?.data || error.message,
+    });
   }
 };
 
