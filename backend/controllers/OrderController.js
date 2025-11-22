@@ -28,7 +28,7 @@ const createOrder = async (req, res) => {
     });
 
     // Fetch cart - support either Items or items (defensive)
-    const cart = await Cart.findOne({ userId: req.user._id }).populate('Items.productId').populate('items.productId');
+    const cart = await Cart.findOne({ userId: req.user._id }).populate('Items.productId')
 
     if (!cart) {
       return res.status(400).json({ msg: 'Cart not found' });
