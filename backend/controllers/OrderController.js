@@ -49,7 +49,7 @@ const createOrder = async (req, res) => {
         customer_phone: contact,
       },
       order_meta: {
-        return_url: `${req.protocol}://${req.get("host")}/payment-confirmation`,
+        return_url: `${process.env.FRONTEND_URL}/payment-confirmation`,
         notify_url: process.env.PUBLIC_WEBHOOK_BASE_URL || "",
       },
     };
